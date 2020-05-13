@@ -13,6 +13,8 @@ var connection = mysql.createConnection({
 var all = "SELECT * FROM products";
 var both = 'SELECT * FROM products;UPDATE products SET stock_quantity = " + newQuantity + " WHERE item_id = ?" [answer.id]';
 var update = '"UPDATE products SET stock_quantity = " + newQuantity + " WHERE item_id = " + itemID"';
+var newQuantity = "";
+var itemID = "";
 
 function listProducts() {
     connection.query(all, function (err, res) {
@@ -54,9 +56,9 @@ function listProducts() {
                 }
                 else {
                     var itemIndex = res[answer.id - (parseInt(1))];
-                    var newQuantity = itemIndex.stock_quantity - parseInt(answer.quantity);
+                    newQuantity += itemIndex.stock_quantity - parseInt(answer.quantity);
+                    itemID += answer.id;
                     var itemPrice = parseInt(itemIndex.price);
-                    var itemID = answer.id;
                     console.log("\nYou have chosen item #" + answer.id + ": " + itemIndex.product_name +
                     "\nQuantity in cart: " + answer.quantity +
                     "\nOrder Total: $" + answer.quantity * itemPrice); 
@@ -74,12 +76,7 @@ function listProducts() {
                             .then(function (answer) {
                                 if (answer.purchase === true) {
                                     console.log("Thank you for your purchase!");
-                                //     connection.query("UPDATE products SET stock_quantity = " + 550 + " WHERE item_id = " + 3,
-                                //     function (err, res) {
-                                //         if (err) throw err;
-                                //         console.log(res);
-                                //     }
-                                // );
+                                    updateStock();
                                 } else {
                                     console.log("No purchase has been made.");
                                 }
@@ -87,23 +84,20 @@ function listProducts() {
                     }
                 }
             });
-    });
+    });                     
 }
-
 
 function updateStock() {
-    connection.query("UPDATE products SET stock_quantity = " + 330 + " WHERE item_id = " + 3,
+    connection.query("UPDATE products SET stock_quantity = " + newQuantity + " WHERE item_id = " + itemID,
         function (err, res) {
             if (err) throw err;
-            console.log(res);
+            console.log("Stock of Item #" + itemID + " has been updated to " + newQuantity + ".");
         }
     );
+    connection.end();
 }
-
 
 connection.connect(function (err) {
     if (err) throw err;
     listProducts();
-    // updateStock();
-    connection.end();
 });
