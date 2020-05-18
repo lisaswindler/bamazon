@@ -6,58 +6,53 @@ var connection = mysql.createConnection({
     port: 8889,
     user: "root",
     password: "root",
-    database: "bamazon",
-    multipleStatements: true
+    database: "bamazon"
 });
 
 connection.connect(function (err) {
     if (err) throw err;
+    console.log("\033[1mWelcome, Bamazon manager!\033[0m");
     menuOptions();
 });
 
 function menuOptions() {
-    inquirer.prompt([
-        {
-            type: 'list',
-            name: 'options',
-            message: 'Welcome, Bamazon manager. What would you like to do?',
-            choices: ['View Products for Sale', 'View Low Inventory', 'Add to Inventory', 'Add New Product'],
-        },
-    ])
-        .then(answers => {
-            var selection = answers.options;
-
-            switch (selection) {
-                case 'View Products for Sale':  
-                    viewProducts();
-                    connection.end();
-                    break;
-                case 'View Low Inventory':
-                    viewLowInventory();
-                    connection.end();
-                    break;
-                case 'Add to Inventory':
-                    addToInventory();
-                    break;
-                case 'Add New Product':
-                    addProduct();
-                    // connection.end();
-                    break;
-            };
-
-        });
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'options',
+                message: 'What would you like to do?',
+                choices: ['View Products for Sale', 'View Low Inventory', 'Add to Inventory', 'Add New Product', 'Leave'],
+            },
+        ])
+            .then(answers => {
+                var selection = answers.options;
+                switch (selection) {
+                    case 'View Products for Sale':
+                        viewProducts();
+                        break;
+                    case 'View Low Inventory':
+                        viewLowInventory();
+                        break;
+                    case 'Add to Inventory':
+                        addToInventory();
+                        break;
+                    case 'Add New Product':
+                        addProduct();
+                        break;
+                    case 'Leave':
+                        console.log("Goodbye!")
+                        connection.end();
+                        break;
+                };
+            });
 };
 
 function viewProducts() {
     connection.query("SELECT * FROM products",
         function (err, res) {
             if (err) throw err;
-            for (var i = 0; i < res.length; i++) {
-                console.log("\nItem #" + res[i].item_id + ": " + res[i].product_name +
-                    "\nDepartment: " + res[i].department_name +
-                    "\nPrice: $" + res[i].price +
-                    "\nStock: " + res[i].stock_quantity);
-            }
+            console.table(res);
+            menuOptions();
         }
     );
 };
@@ -66,37 +61,29 @@ function viewLowInventory() {
     connection.query("SELECT * FROM products WHERE stock_quantity < ?", [6],
         function (err, res) {
             if (err) throw err;
-            for (var i = 0; i < res.length; i++) {
-                console.log("\nHere are your low inventory items: " +
-                    "\n\nItem #" + res[i].item_id + ": " + res[i].product_name +
-                    "\nDepartment: " + res[i].department_name +
-                    "\nPrice: $" + res[i].price +
-                    "\nStock: " + res[i].stock_quantity);
-            }
+            console.log("Here are your low inventory items:");
+            console.table(res);
+            menuOptions();
         }
     );
 };
 
 function addToInventory() {
-    connection.query("SELECT * FROM products",
+    connection.query("SELECT item_id,product_name,stock_quantity FROM products",
         function (err, res) {
-            if (err) throw err;
-            for (var i = 0; i < res.length; i++) {
-                console.log("\nItem #" + res[i].item_id + ": " + res[i].product_name +
-                    "\nStock: " + res[i].stock_quantity);
-            }
+            console.table(res);
             setTimeout(function () {
                 inquirer.prompt([
                     {
                         type: "input",
-                        message: "Select an item number to add inventory.",
+                        message: "Select an item ID to add inventory.",
                         name: "id",
                         validate: function (value) {
                             if (isNaN(value) === false && value > 0 && value <= res.length) {
                                 itemIndex = res[value - (parseInt(1))];
                                 return true;
                             }
-                            console.log("\nPlease enter an item number between 1 and " + res.length + ".");
+                            console.log("\nPlease enter an item ID between 1 and " + res.length + ".");
                             return false;
                         }
                     },
@@ -120,7 +107,7 @@ function addToInventory() {
                             function (err, res) {
                                 if (err) throw err;
                                 console.log("Inventory of Item #" + itemID + " has been updated to " + newQuantity + ".");
-                                connection.end(); 
+                                menuOptions();
                             }
                         );
                     });
@@ -181,13 +168,13 @@ function addProduct() {
         }
     ])
         .then(answers => {
-            connection.query("INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES (?, ?, ?, ?)", 
-            [answers.product, answers.department, answers.price, answers.quantity],
-                            function (err, res) {
-                                if (err) throw err;
-                                console.log(answers.product + " has been added to Bamazon.");
-                                connection.end(); 
-                            }
-                        );
+            connection.query("INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES (?, ?, ?, ?)",
+                [answers.product, answers.department, answers.price, answers.quantity],
+                function (err, res) {
+                    if (err) throw err;
+                    console.log(answers.product + " has been added to Bamazon.");
+                    menuOptions();
+                }
+            );
         });
 }

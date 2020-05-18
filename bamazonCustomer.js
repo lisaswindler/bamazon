@@ -6,8 +6,7 @@ var connection = mysql.createConnection({
     port: 8889,
     user: "root",
     password: "root",
-    database: "bamazon",
-    multipleStatements: true
+    database: "bamazon"
 });
 
 var newQuantity = "";
@@ -19,24 +18,23 @@ connection.connect(function (err) {
 });
 
 function buyProducts() {
+    newQuantity = "";
+    itemID = "";
+    console.log("\033[1mWelcome! What are you interested in shopping for today?\033[0m");
     connection.query("SELECT * FROM products", function (err, res) {
         if (err) throw err;
-        for (var i = 0; i < res.length; i++) {
-            console.log("\nItem #" + res[i].item_id + ": " + res[i].product_name +
-                "\nPrice: $" + res[i].price +
-                "\nStock: " + res[i].stock_quantity);
-        }
+        console.table(res);
         inquirer.prompt([
             {
                 type: "input",
-                message: "Enter the item number of the product you would like to buy.",
+                message: "Enter the item ID of the product you would like to buy.",
                 name: "id",
                 validate: function (value) {
                     if (isNaN(value) === false && value > 0 && value <= res.length) {
                         itemIndex = res[value - (parseInt(1))];
                         return true;
                     }
-                    console.log("\nPlease enter an item number between 1 and " + res.length + ".");
+                    console.log("\nPlease enter an item ID between 1 and " + res.length + ".");
                     return false;
                 }
             },
@@ -74,7 +72,7 @@ function buyProducts() {
                             updateStock();
                         } else {
                             console.log("No purchase has been made.");
-                            connection.end();
+                            stayOrGo();
                         }
                     });
             });
@@ -86,7 +84,26 @@ function updateStock() {
         function (err, res) {
             if (err) throw err;
             console.log("Stock of Item #" + itemID + " has been updated to " + newQuantity + ".");
+            stayOrGo();
         }
-    );
-    connection.end();
+    ); 
+}
+
+function stayOrGo() {
+    inquirer.prompt([
+        {
+            type: "confirm",
+            message: 'Would you like to view the product selection again?',
+            name: "repeat",
+            default: true
+        }
+    ])
+        .then(answer => {
+            if (answer.repeat === true) {
+                buyProducts();
+            } else {
+                console.log("Thank you for shopping at Bamazon. Goodbye!");
+                connection.end();
+            }
+        })
 }
