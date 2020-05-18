@@ -13,13 +13,13 @@ This command line application makes it easy for customers to shop and for manage
 [![Bamazon Demo Video](bamazon.png)](https://youtu.be/0GPg0lCjxj8 "Bamazon Demo") 
 
 ## In the manager app, you can:
-* View all products and their details in the inventory
-* View only the low inventory items (fewer than 5 in stock)
-* Update the stock of any item
-* Add new products, along with their prices, department, and stock quantity, to the database
+* View all products and their details in the inventory.
+* View only the low inventory items (fewer than 5 in stock).
+* Update the stock of any item.
+* Add new products, along with their prices, department, and stock quantity, to the database.
 
 ## Technologies Bamazon incorporates:
 * Node, including these packages:
     * [mysql](https://www.npmjs.com/package/mysql): to connect to the Sequel Pro database.
     * [inquirer](https://www.npmjs.com/package/inquirer): for prompting the user with questions and receiving user input.
-    * Javascript: written by Lisa Campbell
+    * Javascript: written by Lisa Campbell.
